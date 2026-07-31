@@ -182,6 +182,26 @@
 
     .brush-toggle { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
+    .language-toggle {
+      display: flex;
+      gap: 2px;
+      padding: 2px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .language-mode {
+      width: 28px;
+      height: 24px;
+      border-radius: 3px;
+      color: #8a8a8a;
+      font-size: 9px;
+      font-weight: 600;
+      transition: background 150ms ease, color 150ms ease;
+    }
+    .language-mode:hover { color: #f2f2f2; }
+    .language-mode.is-active { background: #f2f2f2; color: #0d0d0d; }
+
     .primary-action {
       background: var(--accent) !important;
       color: var(--bg) !important;
@@ -217,14 +237,18 @@
         </div>
         <div>
           <div class="text-[13px] font-semibold tracking-[0.08em] uppercase">Contour Grid</div>
-          <div class="text-[10px] text-zinc-500 tracking-[0.08em] uppercase">Image study / 01</div>
+          <div class="text-[10px] text-zinc-500 tracking-[0.08em] uppercase" data-i18n="imageStudy">Image study / Symbol</div>
         </div>
       </div>
-      <div class="flex items-center gap-3 text-[11px] text-zinc-500">
-        <span id="engineStatus" class="hidden sm:inline-flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-zinc-600"></span>Waiting for image</span>
-        <button id="resetBtn" type="button" class="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition" title="Reset parameters">
+      <div class="flex items-center gap-2 sm:gap-3 text-[11px] text-zinc-500">
+        <span id="engineStatus" class="hidden sm:inline-flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-zinc-600"></span><span data-i18n="waitingForImage">Waiting for image</span></span>
+        <div class="language-toggle" role="group" aria-label="Language" data-i18n-aria="language">
+          <button type="button" class="language-mode is-active" data-language="en" aria-pressed="true">EN</button>
+          <button type="button" class="language-mode" data-language="zh" aria-pressed="false">中</button>
+        </div>
+        <button id="resetBtn" type="button" class="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition" title="Reset parameters" data-i18n-title="resetParameters">
           <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v6h6"/></svg>
-          Reset
+          <span data-i18n="reset">Reset</span>
         </button>
       </div>
     </header>
@@ -232,16 +256,16 @@
     <div class="mx-auto grid max-w-[1440px] grid-cols-1 lg:grid-cols-[292px_minmax(0,1fr)] min-h-[calc(100vh-4rem)]">
       <aside class="border-b lg:border-b-0 lg:border-r hairline px-5 sm:px-8 lg:px-7 py-7 lg:py-8">
         <div class="mb-8">
-          <p class="mb-2 text-[10px] font-medium uppercase tracking-[0.16em] text-aqua/80">Input</p>
-          <h1 class="text-[25px] leading-tight font-medium tracking-[-0.02em]">Map the edge.<br><span class="text-zinc-500">Keep the signal.</span></h1>
+          <p class="mb-2 text-[10px] font-medium uppercase tracking-[0.16em] text-aqua/80" data-i18n="input">Input</p>
+          <h1 class="text-[25px] leading-tight font-medium tracking-[-0.02em]"><span data-i18n="headlinePrimary">Map the edge.</span><br><span class="text-zinc-500" data-i18n="headlineSecondary">Keep the signal.</span></h1>
         </div>
 
         <label id="uploadZone" for="fileInput" class="upload-zone group block cursor-pointer rounded-lg px-4 py-5">
           <input id="fileInput" class="sr-only-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
           <div class="flex items-start justify-between gap-3">
             <div>
-              <div class="mb-1.5 text-[12px] font-medium text-zinc-200">Drop an image here</div>
-              <div class="text-[11px] leading-relaxed text-zinc-500">PNG, JPG or WebP<br>Up to 12 MB</div>
+              <div class="mb-1.5 text-[12px] font-medium text-zinc-200" data-i18n="dropImage">Drop an image here</div>
+              <div class="text-[11px] leading-relaxed text-zinc-500"><span data-i18n="uploadFormats">PNG, JPG or WebP</span><br><span data-i18n="uploadLimit">Up to 12 MB</span></div>
             </div>
             <span class="mt-0.5 flex h-8 w-8 items-center justify-center rounded-md border border-aqua/35 bg-aqua/10 text-aqua group-hover:bg-aqua/20 transition" aria-hidden="true">
               <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 15v3.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V15"/></svg>
@@ -254,112 +278,112 @@
 
         <section class="mt-6" aria-labelledby="region-heading">
           <div class="mb-3 flex items-center justify-between">
-            <h2 id="region-heading" class="text-[10px] font-medium uppercase tracking-[0.16em] text-aqua/80">Region</h2>
-            <button id="clearSelectionBtn" type="button" disabled class="inline-flex h-6 w-6 items-center justify-center text-zinc-500 transition hover:text-white disabled:cursor-not-allowed disabled:opacity-25" title="Clear selected area" aria-label="Clear selected area">
+            <h2 id="region-heading" class="text-[10px] font-medium uppercase tracking-[0.16em] text-aqua/80" data-i18n="region">Region</h2>
+            <button id="clearSelectionBtn" type="button" disabled class="inline-flex h-6 w-6 items-center justify-center text-zinc-500 transition hover:text-white disabled:cursor-not-allowed disabled:opacity-25" title="Clear selected area" aria-label="Clear selected area" data-i18n-title="clearSelectedArea" data-i18n-aria="clearSelectedArea">
               <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 7V4h3M17 4h3v3M20 17v3h-3M7 20H4v-3"/><path d="m9 9 6 6M15 9l-6 6"/></svg>
             </button>
           </div>
-          <div class="region-toggle" role="group" aria-label="Contour region mode">
-            <button id="autoSubjectBtn" type="button" class="region-mode is-active">Auto subject</button>
-            <button id="selectAreaBtn" type="button" disabled class="region-mode">Select area</button>
+          <div class="region-toggle" role="group" aria-label="Contour region mode" data-i18n-aria="regionMode">
+            <button id="autoSubjectBtn" type="button" class="region-mode is-active" data-i18n="autoSubject">Auto subject</button>
+            <button id="selectAreaBtn" type="button" disabled class="region-mode" data-i18n="selectArea">Select area</button>
           </div>
           <div id="selectionActions" class="mt-3 hidden grid-cols-2 gap-2">
-            <button id="cancelSelectionBtn" type="button" class="h-9 rounded border border-white/10 text-[11px] text-zinc-400 transition hover:border-white/25 hover:text-white">Cancel</button>
-            <button id="confirmSelectionBtn" type="button" disabled class="primary-action h-9 rounded text-[11px] font-semibold transition">Confirm area</button>
+            <button id="cancelSelectionBtn" type="button" class="h-9 rounded border border-white/10 text-[11px] text-zinc-400 transition hover:border-white/25 hover:text-white" data-i18n="cancel">Cancel</button>
+            <button id="confirmSelectionBtn" type="button" disabled class="primary-action h-9 rounded text-[11px] font-semibold transition" data-i18n="confirmArea">Confirm area</button>
           </div>
           <button id="editSelectionBtn" type="button" class="mt-3 hidden h-9 w-full items-center justify-center gap-2 rounded border border-white/10 text-[11px] text-zinc-300 transition hover:border-aqua/40 hover:text-aqua">
             <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 7V4h3M17 4h3v3M20 17v3h-3M7 20H4v-3"/><path d="M8 12h8M12 8v8"/></svg>
-            Edit area
+            <span data-i18n="editArea">Edit area</span>
           </button>
         </section>
 
         <section class="mt-6" aria-labelledby="brush-heading">
           <div class="mb-3 flex items-center justify-between">
-            <h2 id="brush-heading" class="text-[10px] font-medium uppercase tracking-[0.16em] text-aqua/80">Brush edit</h2>
+            <h2 id="brush-heading" class="text-[10px] font-medium uppercase tracking-[0.16em] text-aqua/80" data-i18n="brushEdit">Brush edit</h2>
             <div class="flex items-center gap-1">
-              <button id="undoBrushBtn" type="button" disabled class="inline-flex h-6 w-6 items-center justify-center text-zinc-500 transition hover:text-white disabled:cursor-not-allowed disabled:opacity-25" title="Undo last brush stroke" aria-label="Undo last brush stroke">
+              <button id="undoBrushBtn" type="button" disabled class="inline-flex h-6 w-6 items-center justify-center text-zinc-500 transition hover:text-white disabled:cursor-not-allowed disabled:opacity-25" title="Undo last brush stroke" aria-label="Undo last brush stroke" data-i18n-title="undoBrush" data-i18n-aria="undoBrush">
                 <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M9 7 4 12l5 5"/><path d="M5 12h8a6 6 0 0 1 6 6"/></svg>
               </button>
-              <button id="clearBrushBtn" type="button" disabled class="inline-flex h-6 w-6 items-center justify-center text-zinc-500 transition hover:text-white disabled:cursor-not-allowed disabled:opacity-25" title="Clear brush edits" aria-label="Clear brush edits">
+              <button id="clearBrushBtn" type="button" disabled class="inline-flex h-6 w-6 items-center justify-center text-zinc-500 transition hover:text-white disabled:cursor-not-allowed disabled:opacity-25" title="Clear brush edits" aria-label="Clear brush edits" data-i18n-title="clearBrush" data-i18n-aria="clearBrush">
                 <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/><path d="M10 11v5M14 11v5"/></svg>
               </button>
             </div>
           </div>
-          <div class="marker-toggle brush-toggle" role="group" aria-label="Brush mode">
-            <button type="button" class="marker-mode is-active" data-brush-mode="off" aria-pressed="true">Off</button>
-            <button type="button" class="marker-mode" data-brush-mode="add" aria-pressed="false" disabled>Add</button>
-            <button type="button" class="marker-mode" data-brush-mode="erase" aria-pressed="false" disabled>Erase</button>
+          <div class="marker-toggle brush-toggle" role="group" aria-label="Brush mode" data-i18n-aria="brushMode">
+            <button type="button" class="marker-mode is-active" data-brush-mode="off" aria-pressed="true" data-i18n="off">Off</button>
+            <button type="button" class="marker-mode" data-brush-mode="add" aria-pressed="false" disabled data-i18n="add">Add</button>
+            <button type="button" class="marker-mode" data-brush-mode="erase" aria-pressed="false" disabled data-i18n="erase">Erase</button>
           </div>
           <div class="mt-4">
-            <div class="mb-3 flex items-center justify-between"><label for="brushSize" class="text-[12px] text-zinc-300">Brush diameter</label><output id="brushSizeValue" class="font-mono text-[11px] text-zinc-500">56 px</output></div>
-            <input id="brushSize" type="range" min="16" max="144" value="56" step="2" aria-label="Brush diameter" disabled />
+            <div class="mb-3 flex items-center justify-between"><label for="brushSize" class="text-[12px] text-zinc-300" data-i18n="brushDiameter">Brush diameter</label><output id="brushSizeValue" class="font-mono text-[11px] text-zinc-500">56 px</output></div>
+            <input id="brushSize" type="range" min="16" max="144" value="56" step="2" aria-label="Brush diameter" data-i18n-aria="brushDiameter" disabled />
           </div>
         </section>
 
         <section class="mt-8" aria-labelledby="parameters-heading">
           <div class="mb-5 flex items-center justify-between">
-            <h2 id="parameters-heading" class="text-[10px] font-medium uppercase tracking-[0.16em] text-aqua/80">Parameters</h2>
-            <span class="text-[10px] text-zinc-600">Live preview</span>
+            <h2 id="parameters-heading" class="text-[10px] font-medium uppercase tracking-[0.16em] text-aqua/80" data-i18n="parameters">Parameters</h2>
+            <span class="text-[10px] text-zinc-600" data-i18n="livePreview">Live preview</span>
           </div>
 
           <div class="space-y-7">
             <div>
-              <div class="mb-3 text-[12px] text-zinc-300">Marker style</div>
-              <div class="marker-toggle" role="group" aria-label="Marker style">
-                <button type="button" class="marker-mode is-active" data-marker-style="square" aria-pressed="true">Square</button>
-                <button type="button" class="marker-mode" data-marker-style="ring" aria-pressed="false">Ring</button>
-                <button type="button" class="marker-mode font-mono" data-marker-style="binary" aria-pressed="false">01</button>
-                <button type="button" class="marker-mode" data-marker-style="mixed" aria-pressed="false">Mixed</button>
+              <div class="mb-3 text-[12px] text-zinc-300" data-i18n="markerStyle">Marker style</div>
+              <div class="marker-toggle" role="group" aria-label="Marker style" data-i18n-aria="markerStyle">
+                <button type="button" class="marker-mode is-active" data-marker-style="square" aria-pressed="true" data-i18n="square">Square</button>
+                <button type="button" class="marker-mode" data-marker-style="ring" aria-pressed="false" data-i18n="ring">Ring</button>
+                <button type="button" class="marker-mode font-mono" data-marker-style="symbols" aria-pressed="false" data-i18n="symbol">Symbol</button>
+                <button type="button" class="marker-mode" data-marker-style="mixed" aria-pressed="false" data-i18n="mixed">Mixed</button>
               </div>
             </div>
 
             <div>
-              <div class="mb-3 flex items-center justify-between"><label for="blockSize" class="text-[12px] text-zinc-300">Marker size</label><output id="blockSizeValue" class="font-mono text-[11px] text-zinc-500">8 px</output></div>
-              <input id="blockSize" type="range" min="2" max="24" value="8" step="1" aria-label="Marker size" />
-              <div class="mt-2 flex justify-between text-[9px] uppercase tracking-[0.12em] text-zinc-600"><span>Fine</span><span>Bold</span></div>
+              <div class="mb-3 flex items-center justify-between"><label for="blockSize" class="text-[12px] text-zinc-300" data-i18n="markerSize">Marker size</label><output id="blockSizeValue" class="font-mono text-[11px] text-zinc-500">8 px</output></div>
+              <input id="blockSize" type="range" min="2" max="24" value="8" step="1" aria-label="Marker size" data-i18n-aria="markerSize" />
+              <div class="mt-2 flex justify-between text-[9px] uppercase tracking-[0.12em] text-zinc-600"><span data-i18n="fine">Fine</span><span data-i18n="bold">Bold</span></div>
             </div>
 
             <div>
-              <div class="mb-3 flex items-center justify-between"><label for="gridSize" class="text-[12px] text-zinc-300">Grid spacing</label><output id="gridSizeValue" class="font-mono text-[11px] text-zinc-500">24 px</output></div>
-              <input id="gridSize" type="range" min="8" max="56" value="24" step="1" aria-label="Grid spacing" />
-              <div class="mt-2 flex justify-between text-[9px] uppercase tracking-[0.12em] text-zinc-600"><span>Dense</span><span>Open</span></div>
+              <div class="mb-3 flex items-center justify-between"><label for="gridSize" class="text-[12px] text-zinc-300" data-i18n="gridSpacing">Grid spacing</label><output id="gridSizeValue" class="font-mono text-[11px] text-zinc-500">24 px</output></div>
+              <input id="gridSize" type="range" min="8" max="56" value="24" step="1" aria-label="Grid spacing" data-i18n-aria="gridSpacing" />
+              <div class="mt-2 flex justify-between text-[9px] uppercase tracking-[0.12em] text-zinc-600"><span data-i18n="dense">Dense</span><span data-i18n="open">Open</span></div>
             </div>
 
             <div>
-              <div class="mb-3 flex items-center justify-between"><label for="sensitivity" class="text-[12px] text-zinc-300">Edge sensitivity</label><output id="sensitivityValue" class="font-mono text-[11px] text-zinc-500">42%</output></div>
-              <input id="sensitivity" type="range" min="5" max="95" value="42" step="1" aria-label="Edge sensitivity" />
-              <div class="mt-2 flex justify-between text-[9px] uppercase tracking-[0.12em] text-zinc-600"><span>More edges</span><span>Less noise</span></div>
+              <div class="mb-3 flex items-center justify-between"><label for="sensitivity" class="text-[12px] text-zinc-300" data-i18n="edgeSensitivity">Edge sensitivity</label><output id="sensitivityValue" class="font-mono text-[11px] text-zinc-500">42%</output></div>
+              <input id="sensitivity" type="range" min="5" max="95" value="42" step="1" aria-label="Edge sensitivity" data-i18n-aria="edgeSensitivity" />
+              <div class="mt-2 flex justify-between text-[9px] uppercase tracking-[0.12em] text-zinc-600"><span data-i18n="moreEdges">More edges</span><span data-i18n="lessNoise">Less noise</span></div>
             </div>
 
             <div>
-              <div class="mb-3 flex items-center justify-between"><label for="contourRange" class="text-[12px] text-zinc-300">Contour range</label><output id="contourRangeValue" class="font-mono text-[11px] text-zinc-500">4 cells</output></div>
-              <input id="contourRange" type="range" min="2" max="8" value="4" step="1" aria-label="Contour range" />
-              <div class="mt-2 flex justify-between text-[9px] uppercase tracking-[0.12em] text-zinc-600"><span>Tight</span><span>Wide</span></div>
+              <div class="mb-3 flex items-center justify-between"><label for="contourRange" class="text-[12px] text-zinc-300" data-i18n="contourRange">Contour range</label><output id="contourRangeValue" class="font-mono text-[11px] text-zinc-500">4 cells</output></div>
+              <input id="contourRange" type="range" min="2" max="8" value="4" step="1" aria-label="Contour range" data-i18n-aria="contourRange" />
+              <div class="mt-2 flex justify-between text-[9px] uppercase tracking-[0.12em] text-zinc-600"><span data-i18n="tight">Tight</span><span data-i18n="wide">Wide</span></div>
             </div>
 
             <div class="flex items-center justify-between border-t border-white/10 pt-5">
-              <div><div class="text-[12px] text-zinc-300">Marker color</div><div id="colorValue" class="mt-1 font-mono text-[10px] uppercase text-zinc-500">#FFFFFF</div></div>
-              <input id="blockColor" type="color" value="#ffffff" aria-label="Marker color" />
+              <div><div class="text-[12px] text-zinc-300" data-i18n="markerColor">Marker color</div><div id="colorValue" class="mt-1 font-mono text-[10px] uppercase text-zinc-500">#FFFFFF</div></div>
+              <input id="blockColor" type="color" value="#ffffff" aria-label="Marker color" data-i18n-aria="markerColor" />
             </div>
           </div>
         </section>
 
         <div class="mt-10 border-t border-white/10 pt-5">
           <button id="exportBtn" type="button" disabled class="primary-action group flex w-full items-center justify-between rounded-md px-4 py-3 text-[12px] font-semibold transition">
-            <span>Export transparent PNG</span>
+            <span data-i18n="exportTransparent">Export transparent PNG</span>
             <svg viewBox="0 0 24 24" class="h-4 w-4 transition-transform group-hover:tranzinc-y-0.5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 4v12"/><path d="m7 11 5 5 5-5"/><path d="M5 20h14"/></svg>
           </button>
           <button id="exportFullBtn" type="button" disabled class="secondary-action group mt-2 flex w-full items-center justify-between rounded-md px-4 py-3 text-[12px] font-medium transition">
-            <span>Export full image PNG</span>
+            <span data-i18n="exportFull">Export full image PNG</span>
             <svg viewBox="0 0 24 24" class="h-4 w-4 transition-transform group-hover:tranzinc-y-0.5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m4 17 4.5-4.5 3.5 3 2.5-2.5L20 18"/></svg>
           </button>
-          <p class="mt-3 text-[10px] uppercase tracking-[0.1em] text-zinc-600">PNG • Original dimensions</p>
+          <p class="mt-3 text-[10px] uppercase tracking-[0.1em] text-zinc-600" data-i18n="originalDimensions">PNG • Original dimensions</p>
         </div>
       </aside>
 
       <section class="min-w-0 px-5 sm:px-8 lg:px-10 py-7 lg:py-8">
         <div class="mb-5 flex flex-wrap items-end justify-between gap-4">
-          <div><p class="mb-1 text-[10px] uppercase tracking-[0.16em] text-zinc-600">Canvas / output</p><h2 class="text-[15px] font-medium text-zinc-200">Contour field</h2></div>
+          <div><p class="mb-1 text-[10px] uppercase tracking-[0.16em] text-zinc-600" data-i18n="canvasOutput">Canvas / output</p><h2 class="text-[15px] font-medium text-zinc-200" data-i18n="contourField">Contour field</h2></div>
           <div class="flex items-center gap-4 text-[10px] uppercase tracking-[0.12em] text-zinc-600"><span id="regionReadout">Auto</span><span class="h-1 w-1 rounded-full bg-zinc-700"></span><span id="dimensionReadout">— × —</span><span class="h-1 w-1 rounded-full bg-zinc-700"></span><span id="blockReadout">0 marks</span></div>
         </div>
 
@@ -370,21 +394,21 @@
               <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-zinc-500/35 bg-zinc-900/40 text-zinc-400">
                 <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m4 17 4.5-4.5 3.5 3 2.5-2.5L20 18"/></svg>
               </div>
-              <p class="text-[13px] font-medium text-zinc-300">Add an image to begin</p>
-              <p class="mt-1 text-[11px] text-zinc-500">Your contour field will appear here</p>
+              <p class="text-[13px] font-medium text-zinc-300" data-i18n="addImage">Add an image to begin</p>
+              <p class="mt-1 text-[11px] text-zinc-500" data-i18n="emptyHint">Your contour field will appear here</p>
             </div>
           </div>
         </div>
 
         <div class="mt-5 flex flex-wrap items-center justify-between gap-3 text-[10px] text-zinc-600">
-          <div class="flex items-center gap-2"><span id="signalSwatch" class="h-2 w-2 rounded-[2px]" style="background:#ffffff"></span><span>Detected edge signal</span></div>
-          <span>Adaptive canvas • grid-aligned output</span>
+          <div class="flex items-center gap-2"><span id="signalSwatch" class="h-2 w-2 rounded-[2px]" style="background:#ffffff"></span><span data-i18n="detectedSignal">Detected edge signal</span></div>
+          <span data-i18n="adaptiveCanvas">Adaptive canvas • grid-aligned output</span>
         </div>
 
         <div class="mt-10 grid gap-4 border-t border-white/10 pt-6 sm:grid-cols-3">
-          <div><div class="text-[10px] uppercase tracking-[0.14em] text-zinc-600">Method</div><div class="mt-2 text-[12px] text-zinc-300">Multi-scale foreground contour</div></div>
-          <div><div class="text-[10px] uppercase tracking-[0.14em] text-zinc-600">Sampling</div><div class="mt-2 text-[12px] text-zinc-300">Fine edge + structure support</div></div>
-          <div><div class="text-[10px] uppercase tracking-[0.14em] text-zinc-600">Output</div><div class="mt-2 text-[12px] text-zinc-300">Transparent or full PNG</div></div>
+          <div><div class="text-[10px] uppercase tracking-[0.14em] text-zinc-600" data-i18n="method">Method</div><div class="mt-2 text-[12px] text-zinc-300" data-i18n="methodValue">Multi-scale foreground contour</div></div>
+          <div><div class="text-[10px] uppercase tracking-[0.14em] text-zinc-600" data-i18n="sampling">Sampling</div><div class="mt-2 text-[12px] text-zinc-300" data-i18n="samplingValue">Fine edge + structure support</div></div>
+          <div><div class="text-[10px] uppercase tracking-[0.14em] text-zinc-600" data-i18n="output">Output</div><div class="mt-2 text-[12px] text-zinc-300" data-i18n="outputValue">Transparent or full PNG</div></div>
         </div>
       </section>
     </div>
@@ -410,6 +434,7 @@
       const dimensionReadout = $('dimensionReadout');
       const blockReadout = $('blockReadout');
       const signalSwatch = $('signalSwatch');
+      const languageButtons = [...document.querySelectorAll('[data-language]')];
       const fileMeta = $('fileMeta');
       const fileName = $('fileName');
       const fileSize = $('fileSize');
@@ -431,6 +456,156 @@
       const confirmSelectionBtn = $('confirmSelectionBtn');
       const editSelectionBtn = $('editSelectionBtn');
       const defaults = { blockSize: 8, gridSize: 24, sensitivity: 42, contourRange: 4, brushSize: 56, markerStyle: 'square', color: '#ffffff' };
+      const translations = {
+        en: {
+          pageTitle: 'Contour Grid Studio',
+          imageStudy: 'Image study / Symbol',
+          waitingForImage: 'Waiting for image',
+          signalReady: 'Signal ready',
+          reset: 'Reset',
+          resetParameters: 'Reset parameters',
+          language: 'Language',
+          input: 'Input',
+          headlinePrimary: 'Map the edge.',
+          headlineSecondary: 'Keep the signal.',
+          dropImage: 'Drop an image here',
+          uploadFormats: 'PNG, JPG or WebP',
+          uploadLimit: 'Up to 12 MB',
+          region: 'Region',
+          clearSelectedArea: 'Clear selected area',
+          regionMode: 'Contour region mode',
+          autoSubject: 'Auto subject',
+          selectArea: 'Select area',
+          cancel: 'Cancel',
+          confirmArea: 'Confirm area',
+          editArea: 'Edit area',
+          brushEdit: 'Brush edit',
+          undoBrush: 'Undo last brush stroke',
+          clearBrush: 'Clear brush edits',
+          brushMode: 'Brush mode',
+          off: 'Off',
+          add: 'Add',
+          erase: 'Erase',
+          brushDiameter: 'Brush diameter',
+          parameters: 'Parameters',
+          livePreview: 'Live preview',
+          markerStyle: 'Marker style',
+          square: 'Square',
+          ring: 'Ring',
+          symbol: 'Symbol',
+          mixed: 'Mixed',
+          markerSize: 'Marker size',
+          fine: 'Fine',
+          bold: 'Bold',
+          gridSpacing: 'Grid spacing',
+          dense: 'Dense',
+          open: 'Open',
+          edgeSensitivity: 'Edge sensitivity',
+          moreEdges: 'More edges',
+          lessNoise: 'Less noise',
+          contourRange: 'Contour range',
+          tight: 'Tight',
+          wide: 'Wide',
+          markerColor: 'Marker color',
+          exportTransparent: 'Export transparent PNG',
+          exportFull: 'Export full image PNG',
+          originalDimensions: 'PNG • Original dimensions',
+          canvasOutput: 'Canvas / output',
+          contourField: 'Contour field',
+          addImage: 'Add an image to begin',
+          emptyHint: 'Your contour field will appear here',
+          detectedSignal: 'Detected edge signal',
+          adaptiveCanvas: 'Adaptive canvas • grid-aligned output',
+          method: 'Method',
+          methodValue: 'Multi-scale foreground contour',
+          sampling: 'Sampling',
+          samplingValue: 'Fine edge + structure support',
+          output: 'Output',
+          outputValue: 'Transparent or full PNG',
+          autoStatus: 'Auto',
+          editingStatus: 'Editing',
+          areaStatus: 'Area',
+          cells: value => `${value} cells`,
+          marks: value => `${value.toLocaleString()} marks`
+        },
+        zh: {
+          pageTitle: 'Contour Grid Studio',
+          imageStudy: '图像研究 / 符号',
+          waitingForImage: '等待图片',
+          signalReady: '已就绪',
+          reset: '重置',
+          resetParameters: '重置参数',
+          language: '语言',
+          input: '输入',
+          headlinePrimary: '勾勒边缘。',
+          headlineSecondary: '保留关键信号。',
+          dropImage: '拖放图片到这里',
+          uploadFormats: 'PNG、JPG 或 WebP',
+          uploadLimit: '最大 12 MB',
+          region: '识别区域',
+          clearSelectedArea: '清除选区',
+          regionMode: '轮廓区域模式',
+          autoSubject: '自动主体',
+          selectArea: '选择区域',
+          cancel: '取消',
+          confirmArea: '确认区域',
+          editArea: '编辑区域',
+          brushEdit: '画笔编辑',
+          undoBrush: '撤销上一笔',
+          clearBrush: '清空画笔编辑',
+          brushMode: '画笔模式',
+          off: '关闭',
+          add: '添加',
+          erase: '删除',
+          brushDiameter: '画笔直径',
+          parameters: '参数',
+          livePreview: '实时预览',
+          markerStyle: '标记样式',
+          square: '方块',
+          ring: '圆环',
+          symbol: '符号',
+          mixed: '混搭',
+          markerSize: '标记大小',
+          fine: '精细',
+          bold: '粗大',
+          gridSpacing: '网格间距',
+          dense: '密集',
+          open: '稀疏',
+          edgeSensitivity: '边缘灵敏度',
+          moreEdges: '更多边缘',
+          lessNoise: '更少噪点',
+          contourRange: '轮廓范围',
+          tight: '紧凑',
+          wide: '宽泛',
+          markerColor: '标记颜色',
+          exportTransparent: '导出透明 PNG',
+          exportFull: '导出完整图片 PNG',
+          originalDimensions: 'PNG • 原始尺寸',
+          canvasOutput: '画布 / 输出',
+          contourField: '轮廓场',
+          addImage: '添加图片以开始',
+          emptyHint: '轮廓结果将显示在这里',
+          detectedSignal: '已检测边缘信号',
+          adaptiveCanvas: '自适应画布 • 网格对齐输出',
+          method: '方法',
+          methodValue: '多尺度前景轮廓',
+          sampling: '采样',
+          samplingValue: '精细边缘 + 结构支持',
+          output: '输出',
+          outputValue: '透明或完整 PNG',
+          autoStatus: '自动',
+          editingStatus: '编辑中',
+          areaStatus: '选区',
+          cells: value => `${value} 格`,
+          marks: value => `${value.toLocaleString()} 个标记`
+        }
+      };
+      const storedLanguage = (() => {
+        try { return localStorage.getItem('contour-grid-language'); } catch (error) { return null; }
+      })();
+      let currentLanguage = storedLanguage === 'zh' || storedLanguage === 'en'
+        ? storedLanguage
+        : (navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en';
       let sourceImage = null;
       let edgeMap = null;
       let coarseEdgeMap = null;
@@ -458,6 +633,36 @@
         return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
       };
 
+      function t(key, ...params) {
+        const value = translations[currentLanguage]?.[key] ?? translations.en[key] ?? key;
+        return typeof value === 'function' ? value(...params) : value;
+      }
+
+      function applyLanguage(language) {
+        if (!translations[language]) return;
+        currentLanguage = language;
+        document.documentElement.lang = language;
+        document.title = t('pageTitle');
+        document.querySelectorAll('[data-i18n]').forEach((element) => {
+          element.textContent = t(element.dataset.i18n);
+        });
+        document.querySelectorAll('[data-i18n-title]').forEach((element) => {
+          element.title = t(element.dataset.i18nTitle);
+        });
+        document.querySelectorAll('[data-i18n-aria]').forEach((element) => {
+          element.setAttribute('aria-label', t(element.dataset.i18nAria));
+        });
+        languageButtons.forEach((button) => {
+          const active = button.dataset.language === language;
+          button.classList.toggle('is-active', active);
+          button.setAttribute('aria-pressed', String(active));
+        });
+        try { localStorage.setItem('contour-grid-language', language); } catch (error) { /* Storage can be unavailable in private contexts. */ }
+        updateReadouts();
+        updateRegionControls();
+        if (sourceImage) render(false);
+      }
+
       function updateSliderFill(input) {
         const min = Number(input.min), max = Number(input.max), val = Number(input.value);
         input.style.setProperty('--fill', `${((val - min) / (max - min)) * 100}%`);
@@ -467,9 +672,10 @@
         $('blockSizeValue').textContent = `${blockSize.value} px`;
         $('gridSizeValue').textContent = `${gridSize.value} px`;
         $('sensitivityValue').textContent = `${sensitivity.value}%`;
-        $('contourRangeValue').textContent = `${contourRange.value} cells`;
+        $('contourRangeValue').textContent = t('cells', Number(contourRange.value));
         $('brushSizeValue').textContent = `${brushSize.value} px`;
         $('colorValue').textContent = blockColor.value.toUpperCase();
+        blockReadout.textContent = t('marks', cells.length);
         signalSwatch.style.backgroundColor = blockColor.value;
         [blockSize, gridSize, sensitivity, contourRange, brushSize].forEach(updateSliderFill);
       }
@@ -960,7 +1166,11 @@
         editSelectionBtn.classList.toggle('flex', showEdit);
         previewCanvas.classList.toggle('area-selecting', isEditing);
         if (!isEditing) previewCanvas.style.cursor = '';
-        regionReadout.textContent = !isManual ? 'Auto' : isEditing ? 'Editing' : 'Area';
+        regionReadout.textContent = !isManual
+          ? t('autoStatus')
+          : isEditing
+            ? t('editingStatus')
+            : t('areaStatus');
         updateBrushControls();
       }
 
@@ -1129,8 +1339,10 @@
             ctx.beginPath();
             ctx.arc(cell.x, cell.y, Math.max(0.75, half - ringWidth / 2), 0, Math.PI * 2);
             ctx.stroke();
-          } else if (style === 'binary') {
-            ctx.fillText(isAlternate ? '1' : '0', cell.x, cell.y + size * 0.04);
+          } else if (style === 'symbols') {
+            const symbols = ['0', '1', '+', '/', '*'];
+            const symbol = symbols[(cell.row * 2 + cell.column) % symbols.length];
+            ctx.fillText(symbol, cell.x, cell.y + size * 0.04);
           } else {
             ctx.fillRect(Math.round(cell.x - half), Math.round(cell.y - half), size, size);
           }
@@ -1148,7 +1360,7 @@
         drawMarkers(previewCtx);
         drawSelectionOverlay();
         drawBrushCursor();
-        blockReadout.textContent = `${cells.length.toLocaleString()} marks`;
+        blockReadout.textContent = t('marks', cells.length);
         const exportLocked = regionMode === 'manual' && selectionEditing;
         exportBtn.disabled = !cells.length || exportLocked;
         exportFullBtn.disabled = !sourceImage || exportLocked;
@@ -1180,7 +1392,7 @@
           fileMeta.classList.add('flex');
           fileName.textContent = file.name;
           fileSize.textContent = formatBytes(file.size);
-          engineStatus.innerHTML = '<span class="h-1.5 w-1.5 rounded-full bg-zinc-400"></span>Signal ready';
+          engineStatus.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-zinc-400"></span><span data-i18n="signalReady">${t('signalReady')}</span>`;
           engineStatus.classList.remove('text-zinc-500');
           engineStatus.classList.add('text-zinc-300/80');
           URL.revokeObjectURL(url);
@@ -1193,6 +1405,7 @@
       ['dragenter', 'dragover'].forEach(type => uploadZone.addEventListener(type, (event) => { event.preventDefault(); uploadZone.classList.add('is-dragging'); }));
       ['dragleave', 'drop'].forEach(type => uploadZone.addEventListener(type, (event) => { event.preventDefault(); uploadZone.classList.remove('is-dragging'); }));
       uploadZone.addEventListener('drop', (event) => loadFile(event.dataTransfer.files[0]));
+      languageButtons.forEach(button => button.addEventListener('click', () => applyLanguage(button.dataset.language)));
       [blockSize, blockColor, brushSize].forEach(input => input.addEventListener('input', () => render(false)));
       [gridSize, sensitivity, contourRange].forEach(input => input.addEventListener('input', () => render(true)));
       markerModeButtons.forEach(button => button.addEventListener('click', () => setMarkerMode(button.dataset.markerStyle)));
@@ -1389,6 +1602,7 @@
       updateReadouts();
       updateMarkerControls();
       updateRegionControls();
+      applyLanguage(currentLanguage);
       previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
     })();
   </script>
