@@ -182,6 +182,35 @@
 
     .brush-toggle { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
+    .workspace-tabs {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 3px;
+      padding: 3px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.025);
+    }
+    .workspace-tab {
+      min-height: 38px;
+      border-radius: 4px;
+      color: #8a8a8a;
+      font-size: 11px;
+      transition: background 150ms ease, color 150ms ease;
+    }
+    .workspace-tab:hover { color: #f2f2f2; }
+    .workspace-tab.is-active { background: #f2f2f2; color: #0d0d0d; }
+
+    .heat-stage { background: #050505; }
+    .heat-stage #heatPreviewCanvas { display: block; width: 100%; height: 100%; touch-action: none; }
+    .heat-stage .empty-state { color: #cfcfcf; }
+    .gradient-chip {
+      height: 30px;
+      width: 38px;
+      flex: 0 0 auto;
+    }
+
+    .seed-readout { min-width: 5.5rem; text-align: right; }
+
     .language-toggle {
       display: flex;
       gap: 2px;
@@ -253,7 +282,12 @@
       </div>
     </header>
 
-    <div class="mx-auto grid max-w-[1440px] grid-cols-1 lg:grid-cols-[292px_minmax(0,1fr)] min-h-[calc(100vh-4rem)]">
+    <nav class="workspace-tabs mx-auto max-w-[1440px]" aria-label="Workspace mode" data-i18n-aria="workspaceMode">
+      <button type="button" class="workspace-tab is-active" data-workspace-mode="contour" aria-pressed="true" data-i18n="contourMode">Contour grid</button>
+      <button type="button" class="workspace-tab" data-workspace-mode="heatmap" aria-pressed="false" data-i18n="heatmapMode">Heatmap</button>
+    </nav>
+
+    <div id="contourWorkspace" class="mx-auto grid max-w-[1440px] grid-cols-1 lg:grid-cols-[292px_minmax(0,1fr)] min-h-[calc(100vh-6.75rem)]">
       <aside class="border-b lg:border-b-0 lg:border-r hairline px-5 sm:px-8 lg:px-7 py-7 lg:py-8">
         <div class="mb-8">
           <p class="mb-2 text-[10px] font-medium uppercase tracking-[0.16em] text-aqua/80" data-i18n="input">Input</p>
@@ -377,6 +411,10 @@
             <span data-i18n="exportFull">Export full image PNG</span>
             <svg viewBox="0 0 24 24" class="h-4 w-4 transition-transform group-hover:tranzinc-y-0.5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m4 17 4.5-4.5 3.5 3 2.5-2.5L20 18"/></svg>
           </button>
+          <button id="sendToHeatmapBtn" type="button" disabled class="secondary-action group mt-2 flex w-full items-center justify-between rounded-md px-4 py-3 text-[12px] font-medium transition">
+            <span data-i18n="sendToHeatmap">Send result to Heatmap</span>
+            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14"/><path d="m14 7 5 5-5 5"/></svg>
+          </button>
           <p class="mt-3 text-[10px] uppercase tracking-[0.1em] text-zinc-600" data-i18n="originalDimensions">PNG • Original dimensions</p>
         </div>
       </aside>
@@ -412,9 +450,153 @@
         </div>
       </section>
     </div>
+
+    <div id="heatmapWorkspace" class="hidden mx-auto grid max-w-[1440px] grid-cols-1 lg:grid-cols-[292px_minmax(0,1fr)] min-h-[calc(100vh-6.75rem)]">
+      <aside class="border-b lg:border-b-0 lg:border-r hairline px-5 sm:px-8 lg:px-7 py-7 lg:py-8">
+        <div class="mb-8">
+          <p class="mb-2 text-[10px] font-medium uppercase tracking-[0.16em] text-aqua/80" data-i18n="heatmapLabel">Heatmap</p>
+          <h1 class="text-[25px] leading-tight font-medium tracking-[-0.02em]"><span data-i18n="heatmapHeadlinePrimary">Build the glow.</span><br><span class="text-zinc-500" data-i18n="heatmapHeadlineSecondary">Keep the contour.</span></h1>
+        </div>
+
+        <label id="heatUploadZone" for="heatFileInput" class="upload-zone group block cursor-pointer rounded-lg px-4 py-5">
+          <input id="heatFileInput" class="sr-only-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="mb-1.5 text-[12px] font-medium text-zinc-200" data-i18n="dropImage">Drop an image here</div>
+              <div class="text-[11px] leading-relaxed text-zinc-500"><span data-i18n="uploadFormats">PNG, JPG or WebP</span><br><span data-i18n="uploadLimit">Up to 12 MB</span></div>
+            </div>
+            <span class="mt-0.5 flex h-8 w-8 items-center justify-center rounded-md border border-aqua/35 bg-aqua/10 text-aqua group-hover:bg-aqua/20 transition" aria-hidden="true">
+              <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 15v3.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V15"/></svg>
+            </span>
+          </div>
+          <div id="heatFileMeta" class="mt-4 hidden items-center justify-between border-t border-white/10 pt-3 text-[10px] text-zinc-400">
+            <span id="heatFileName" class="max-w-[190px] truncate"></span><span id="heatFileSize"></span>
+          </div>
+        </label>
+
+        <section class="mt-8" aria-labelledby="heat-parameters-heading">
+          <div class="mb-5 flex items-center justify-between">
+            <h2 id="heat-parameters-heading" class="text-[10px] font-medium uppercase tracking-[0.16em] text-aqua/80" data-i18n="heatParameters">Heatmap parameters</h2>
+            <span class="text-[10px] text-zinc-600" data-i18n="livePreview">Live preview</span>
+          </div>
+
+          <div class="space-y-7">
+            <div>
+              <div class="mb-3 text-[12px] text-zinc-300" data-i18n="gradient">Gradient</div>
+              <div class="flex items-center justify-between gap-2">
+                <label class="flex min-w-0 flex-1 items-center gap-2 text-[10px] text-zinc-500"><input id="heatLowColor" class="gradient-chip" type="color" value="#170608" aria-label="Gradient shadow" data-i18n-aria="gradientShadow" /><span data-i18n="shadow">Shadow</span></label>
+                <label class="flex min-w-0 flex-1 items-center gap-2 text-[10px] text-zinc-500"><input id="heatMidColor" class="gradient-chip" type="color" value="#f16f5b" aria-label="Gradient midtone" data-i18n-aria="gradientMidtone" /><span data-i18n="midtone">Mid</span></label>
+                <label class="flex min-w-0 flex-1 items-center gap-2 text-[10px] text-zinc-500"><input id="heatHighColor" class="gradient-chip" type="color" value="#fff3a1" aria-label="Gradient highlight" data-i18n-aria="gradientHighlight" /><span data-i18n="highlight">High</span></label>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between border-t border-white/10 pt-5">
+              <div><div class="text-[12px] text-zinc-300" data-i18n="heatBackground">Background</div><div id="heatBackgroundValue" class="mt-1 font-mono text-[10px] uppercase text-zinc-500">#050505</div></div>
+              <input id="heatBackgroundColor" type="color" value="#050505" aria-label="Heatmap background" data-i18n-aria="heatBackground" />
+            </div>
+
+            <div>
+              <div class="mb-3 flex items-center justify-between"><label for="heatMask" class="text-[12px] text-zinc-300" data-i18n="subjectCutoff">Subject cutoff</label><output id="heatMaskValue" class="font-mono text-[11px] text-zinc-500">36%</output></div>
+              <input id="heatMask" type="range" min="0" max="90" value="36" step="1" aria-label="Subject cutoff" data-i18n-aria="subjectCutoff" />
+              <div class="mt-2 flex justify-between text-[9px] uppercase tracking-[0.12em] text-zinc-600"><span data-i18n="includeMore">Include more</span><span data-i18n="isolateSubject">Isolate subject</span></div>
+            </div>
+
+            <div>
+              <div class="mb-3 flex items-center justify-between"><label for="heatContrast" class="text-[12px] text-zinc-300" data-i18n="heatContrast">Heat contrast</label><output id="heatContrastValue" class="font-mono text-[11px] text-zinc-500">62%</output></div>
+              <input id="heatContrast" type="range" min="0" max="100" value="62" step="1" aria-label="Heat contrast" data-i18n-aria="heatContrast" />
+              <div class="mt-2 flex justify-between text-[9px] uppercase tracking-[0.12em] text-zinc-600"><span data-i18n="soft">Soft</span><span data-i18n="intense">Intense</span></div>
+            </div>
+
+            <div>
+              <div class="mb-3 flex items-center justify-between"><label for="heatGlow" class="text-[12px] text-zinc-300" data-i18n="glow">Glow</label><output id="heatGlowValue" class="font-mono text-[11px] text-zinc-500">18 px</output></div>
+              <input id="heatGlow" type="range" min="0" max="42" value="18" step="1" aria-label="Glow" data-i18n-aria="glow" />
+              <div class="mt-2 flex justify-between text-[9px] uppercase tracking-[0.12em] text-zinc-600"><span data-i18n="quiet">Quiet</span><span data-i18n="bloom">Bloom</span></div>
+            </div>
+
+            <div class="border-t border-white/10 pt-5">
+              <div class="mb-3 text-[12px] text-zinc-300" data-i18n="edgeSquares">Edge squares</div>
+              <div class="space-y-6">
+                <div>
+                  <div class="mb-3 flex items-center justify-between"><label for="heatDensity" class="text-[12px] text-zinc-300" data-i18n="squareDensity">Density</label><output id="heatDensityValue" class="font-mono text-[11px] text-zinc-500">44%</output></div>
+                  <input id="heatDensity" type="range" min="0" max="100" value="44" step="1" aria-label="Square density" data-i18n-aria="squareDensity" />
+                </div>
+                <div>
+                  <div class="mb-3 flex items-center justify-between"><label for="heatSquareSize" class="text-[12px] text-zinc-300" data-i18n="squareSize">Square size</label><output id="heatSquareSizeValue" class="font-mono text-[11px] text-zinc-500">20 px</output></div>
+                  <input id="heatSquareSize" type="range" min="4" max="72" value="20" step="1" aria-label="Square size" data-i18n-aria="squareSize" />
+                </div>
+                <div>
+                  <div class="mb-3 flex items-center justify-between"><label for="heatVariation" class="text-[12px] text-zinc-300" data-i18n="sizeVariation">Size variation</label><output id="heatVariationValue" class="font-mono text-[11px] text-zinc-500">55%</output></div>
+                  <input id="heatVariation" type="range" min="0" max="100" value="55" step="1" aria-label="Size variation" data-i18n-aria="sizeVariation" />
+                </div>
+                <div>
+                  <div class="mb-3 flex items-center justify-between"><label for="heatSpread" class="text-[12px] text-zinc-300" data-i18n="edgeSpread">Edge spread</label><output id="heatSpreadValue" class="font-mono text-[11px] text-zinc-500">22%</output></div>
+                  <input id="heatSpread" type="range" min="0" max="100" value="22" step="1" aria-label="Edge spread" data-i18n-aria="edgeSpread" />
+                </div>
+                <div class="flex items-center justify-between border-t border-white/10 pt-5">
+                  <div><div class="text-[12px] text-zinc-300" data-i18n="squareColor">Square color</div><div id="heatSquareColorValue" class="mt-1 font-mono text-[10px] uppercase text-zinc-500">#f4a3ac</div></div>
+                  <input id="heatSquareColor" type="color" value="#f4a3ac" aria-label="Square color" data-i18n-aria="squareColor" />
+                </div>
+                <div>
+                  <div class="mb-3 flex items-center justify-between"><label for="heatSquareOpacity" class="text-[12px] text-zinc-300" data-i18n="squareOpacity">Square opacity</label><output id="heatSquareOpacityValue" class="font-mono text-[11px] text-zinc-500">65%</output></div>
+                  <input id="heatSquareOpacity" type="range" min="10" max="100" value="65" step="1" aria-label="Square opacity" data-i18n-aria="squareOpacity" />
+                </div>
+                <div class="flex items-center justify-between border-t border-white/10 pt-5">
+                  <div><div class="text-[12px] text-zinc-300" data-i18n="randomSeed">Random seed</div><div id="heatSeedValue" class="mt-1 font-mono text-[10px] text-zinc-500">2407</div></div>
+                  <button id="shuffleHeatSeedBtn" type="button" class="secondary-action inline-flex h-8 items-center gap-2 rounded px-3 text-[10px] transition" title="Shuffle random seed" data-i18n-title="shuffleSeed"><svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 7h3c4 0 5 10 9 10h6"/><path d="m18 14 3 3-3 3"/><path d="M3 17h3c1.2 0 2.1-.7 2.8-1.8M14.2 8.8C15 7.7 16 7 17 7h4"/><path d="m18 4 3 3-3 3"/></svg><span data-i18n="shuffle">Shuffle</span></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="mt-10 border-t border-white/10 pt-5">
+          <button id="heatExportBtn" type="button" disabled class="primary-action group flex w-full items-center justify-between rounded-md px-4 py-3 text-[12px] font-semibold transition">
+            <span data-i18n="exportHeatmap">Export heatmap PNG</span>
+            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 4v12"/><path d="m7 11 5 5 5-5"/><path d="M5 20h14"/></svg>
+          </button>
+          <button id="sendToContourBtn" type="button" disabled class="secondary-action group mt-2 flex w-full items-center justify-between rounded-md px-4 py-3 text-[12px] font-medium transition">
+            <span data-i18n="sendToContour">Send result to Contour</span>
+            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M19 12H5"/><path d="m10 17-5-5 5-5"/></svg>
+          </button>
+          <p class="mt-3 text-[10px] uppercase tracking-[0.1em] text-zinc-600" data-i18n="heatmapOutputNote">PNG • Heatmap plus edge squares</p>
+        </div>
+      </aside>
+
+      <section class="min-w-0 px-5 sm:px-8 lg:px-10 py-7 lg:py-8">
+        <div class="mb-5 flex flex-wrap items-end justify-between gap-4">
+          <div><p class="mb-1 text-[10px] uppercase tracking-[0.16em] text-zinc-600" data-i18n="canvasOutput">Canvas / output</p><h2 class="text-[15px] font-medium text-zinc-200" data-i18n="heatmapField">Heatmap field</h2></div>
+          <div class="flex items-center gap-4 text-[10px] uppercase tracking-[0.12em] text-zinc-600"><span id="heatRegionReadout" data-i18n="subjectMask">Subject mask</span><span class="h-1 w-1 rounded-full bg-zinc-700"></span><span id="heatDimensionReadout">— × —</span><span class="h-1 w-1 rounded-full bg-zinc-700"></span><span id="heatBlockReadout">0 squares</span></div>
+        </div>
+
+        <div id="heatStage" class="canvas-wrap heat-stage">
+          <canvas id="heatPreviewCanvas" width="960" height="720"></canvas>
+          <div id="heatEmptyState" class="empty-state absolute inset-0 flex items-center justify-center">
+            <div class="text-center">
+              <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-zinc-500/35 bg-zinc-900/40 text-zinc-400">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 19h16"/><path d="M5 16V8l4 3 3-6 3 5 4-2v8"/></svg>
+              </div>
+              <p class="text-[13px] font-medium text-zinc-300" data-i18n="addImage">Add an image to begin</p>
+              <p class="mt-1 text-[11px] text-zinc-500" data-i18n="heatmapEmptyHint">Your heatmap field will appear here</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-5 flex flex-wrap items-center justify-between gap-3 text-[10px] text-zinc-600">
+          <div class="flex items-center gap-2"><span id="heatSignalSwatch" class="h-2 w-2 rounded-[2px]" style="background:#f16f5b"></span><span data-i18n="heatmapSignal">Heat intensity</span></div>
+          <span data-i18n="heatmapCanvasNote">Adaptive canvas • glow and edge sampling</span>
+        </div>
+
+        <div class="mt-10 grid gap-4 border-t border-white/10 pt-6 sm:grid-cols-3">
+          <div><div class="text-[10px] uppercase tracking-[0.14em] text-zinc-600" data-i18n="method">Method</div><div class="mt-2 text-[12px] text-zinc-300" data-i18n="heatmapMethod">Foreground luminance heatmap</div></div>
+          <div><div class="text-[10px] uppercase tracking-[0.14em] text-zinc-600" data-i18n="sampling">Sampling</div><div class="mt-2 text-[12px] text-zinc-300" data-i18n="edgeSampling">Edge-biased random squares</div></div>
+          <div><div class="text-[10px] uppercase tracking-[0.14em] text-zinc-600" data-i18n="output">Output</div><div class="mt-2 text-[12px] text-zinc-300" data-i18n="heatmapOutput">Heatmap PNG with glow</div></div>
+        </div>
+      </section>
+    </div>
   </main>
 
   <canvas id="sourceCanvas" class="hidden"></canvas>
+  <canvas id="heatSourceCanvas" class="hidden"></canvas>
 
   <script>
     (() => {
@@ -423,12 +605,21 @@
       const previewCtx = previewCanvas.getContext('2d');
       const sourceCanvas = $('sourceCanvas');
       const sourceCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
+      const heatPreviewCanvas = $('heatPreviewCanvas');
+      const heatPreviewCtx = heatPreviewCanvas.getContext('2d');
+      const heatSourceCanvas = $('heatSourceCanvas');
+      const heatSourceCtx = heatSourceCanvas.getContext('2d', { willReadFrequently: true });
       const stage = $('stage');
+      const heatStage = $('heatStage');
+      const contourWorkspace = $('contourWorkspace');
+      const heatmapWorkspace = $('heatmapWorkspace');
+      const workspaceModeButtons = [...document.querySelectorAll('[data-workspace-mode]')];
       const fileInput = $('fileInput');
       const uploadZone = $('uploadZone');
       const emptyState = $('emptyState');
       const exportBtn = $('exportBtn');
       const exportFullBtn = $('exportFullBtn');
+      const sendToHeatmapBtn = $('sendToHeatmapBtn');
       const engineStatus = $('engineStatus');
       const regionReadout = $('regionReadout');
       const dimensionReadout = $('dimensionReadout');
@@ -455,16 +646,46 @@
       const cancelSelectionBtn = $('cancelSelectionBtn');
       const confirmSelectionBtn = $('confirmSelectionBtn');
       const editSelectionBtn = $('editSelectionBtn');
+      const heatFileInput = $('heatFileInput');
+      const heatUploadZone = $('heatUploadZone');
+      const heatEmptyState = $('heatEmptyState');
+      const heatFileMeta = $('heatFileMeta');
+      const heatFileName = $('heatFileName');
+      const heatFileSize = $('heatFileSize');
+      const heatDimensionReadout = $('heatDimensionReadout');
+      const heatBlockReadout = $('heatBlockReadout');
+      const heatSignalSwatch = $('heatSignalSwatch');
+      const heatLowColor = $('heatLowColor');
+      const heatMidColor = $('heatMidColor');
+      const heatHighColor = $('heatHighColor');
+      const heatBackgroundColor = $('heatBackgroundColor');
+      const heatMask = $('heatMask');
+      const heatContrast = $('heatContrast');
+      const heatGlow = $('heatGlow');
+      const heatDensity = $('heatDensity');
+      const heatSquareSize = $('heatSquareSize');
+      const heatVariation = $('heatVariation');
+      const heatSpread = $('heatSpread');
+      const heatSquareColor = $('heatSquareColor');
+      const heatSquareOpacity = $('heatSquareOpacity');
+      const shuffleHeatSeedBtn = $('shuffleHeatSeedBtn');
+      const heatExportBtn = $('heatExportBtn');
+      const sendToContourBtn = $('sendToContourBtn');
       const defaults = { blockSize: 8, gridSize: 24, sensitivity: 42, contourRange: 4, brushSize: 56, markerStyle: 'square', color: '#ffffff' };
+      const heatDefaults = { low: '#170608', mid: '#f16f5b', high: '#fff3a1', background: '#050505', mask: 36, contrast: 62, glow: 18, density: 44, size: 20, variation: 55, spread: 22, squareColor: '#f4a3ac', opacity: 65, seed: 2407 };
       const translations = {
         en: {
           pageTitle: 'Contour Grid Studio',
           imageStudy: 'Image study / Symbol',
           waitingForImage: 'Waiting for image',
           signalReady: 'Signal ready',
+          generated: 'Generated',
           reset: 'Reset',
           resetParameters: 'Reset parameters',
           language: 'Language',
+          workspaceMode: 'Workspace mode',
+          contourMode: 'Contour grid',
+          heatmapMode: 'Heatmap',
           input: 'Input',
           headlinePrimary: 'Map the edge.',
           headlineSecondary: 'Keep the signal.',
@@ -522,20 +743,68 @@
           samplingValue: 'Fine edge + structure support',
           output: 'Output',
           outputValue: 'Transparent or full PNG',
+          sendToHeatmap: 'Send result to Heatmap',
+          heatmapLabel: 'Heatmap',
+          heatmapHeadlinePrimary: 'Build the glow.',
+          heatmapHeadlineSecondary: 'Keep the contour.',
+          heatParameters: 'Heatmap parameters',
+          gradient: 'Gradient',
+          gradientShadow: 'Gradient shadow',
+          gradientMidtone: 'Gradient midtone',
+          gradientHighlight: 'Gradient highlight',
+          shadow: 'Shadow',
+          midtone: 'Mid',
+          highlight: 'High',
+          heatBackground: 'Background',
+          subjectCutoff: 'Subject cutoff',
+          includeMore: 'Include more',
+          isolateSubject: 'Isolate subject',
+          heatContrast: 'Heat contrast',
+          soft: 'Soft',
+          intense: 'Intense',
+          glow: 'Glow',
+          quiet: 'Quiet',
+          bloom: 'Bloom',
+          edgeSquares: 'Edge squares',
+          squareDensity: 'Density',
+          squareSize: 'Square size',
+          sizeVariation: 'Size variation',
+          edgeSpread: 'Edge spread',
+          squareColor: 'Square color',
+          squareOpacity: 'Square opacity',
+          randomSeed: 'Random seed',
+          shuffleSeed: 'Shuffle random seed',
+          shuffle: 'Shuffle',
+          exportHeatmap: 'Export heatmap PNG',
+          sendToContour: 'Send result to Contour',
+          heatmapOutputNote: 'PNG • Heatmap plus edge squares',
+          heatmapField: 'Heatmap field',
+          subjectMask: 'Subject mask',
+          heatmapEmptyHint: 'Your heatmap field will appear here',
+          heatmapSignal: 'Heat intensity',
+          heatmapCanvasNote: 'Adaptive canvas • glow and edge sampling',
+          heatmapMethod: 'Foreground luminance heatmap',
+          edgeSampling: 'Edge-biased random squares',
+          heatmapOutput: 'Heatmap PNG with glow',
           autoStatus: 'Auto',
           editingStatus: 'Editing',
           areaStatus: 'Area',
           cells: value => `${value} cells`,
-          marks: value => `${value.toLocaleString()} marks`
+          marks: value => `${value.toLocaleString()} marks`,
+          squares: value => `${value.toLocaleString()} squares`
         },
         zh: {
           pageTitle: 'Contour Grid Studio',
           imageStudy: '图像研究 / 符号',
           waitingForImage: '等待图片',
           signalReady: '已就绪',
+          generated: '已生成',
           reset: '重置',
           resetParameters: '重置参数',
           language: '语言',
+          workspaceMode: '工作模式',
+          contourMode: '轮廓网格',
+          heatmapMode: '热力图',
           input: '输入',
           headlinePrimary: '勾勒边缘。',
           headlineSecondary: '保留关键信号。',
@@ -593,11 +862,55 @@
           samplingValue: '精细边缘 + 结构支持',
           output: '输出',
           outputValue: '透明或完整 PNG',
+          sendToHeatmap: '将结果发送到热力图',
+          heatmapLabel: '热力图',
+          heatmapHeadlinePrimary: '构建热度光场。',
+          heatmapHeadlineSecondary: '保留主体轮廓。',
+          heatParameters: '热力图参数',
+          gradient: '渐变颜色',
+          gradientShadow: '渐变暗部颜色',
+          gradientMidtone: '渐变中间色',
+          gradientHighlight: '渐变高光颜色',
+          shadow: '暗部',
+          midtone: '中间',
+          highlight: '高光',
+          heatBackground: '背景颜色',
+          subjectCutoff: '主体分离',
+          includeMore: '保留更多',
+          isolateSubject: '突出主体',
+          heatContrast: '热度对比',
+          soft: '柔和',
+          intense: '强烈',
+          glow: '外发光',
+          quiet: '收敛',
+          bloom: '扩散',
+          edgeSquares: '边缘方块',
+          squareDensity: '方块密度',
+          squareSize: '方块尺寸',
+          sizeVariation: '尺寸变化',
+          edgeSpread: '边缘扩散',
+          squareColor: '方块颜色',
+          squareOpacity: '方块透明度',
+          randomSeed: '随机种子',
+          shuffleSeed: '刷新随机种子',
+          shuffle: '重新随机',
+          exportHeatmap: '导出热力图 PNG',
+          sendToContour: '将结果发送到轮廓网格',
+          heatmapOutputNote: 'PNG • 热力图与边缘方块',
+          heatmapField: '热力场',
+          subjectMask: '主体遮罩',
+          heatmapEmptyHint: '热力图结果将显示在这里',
+          heatmapSignal: '热度强度',
+          heatmapCanvasNote: '自适应画布 • 发光与边缘采样',
+          heatmapMethod: '前景亮度热力映射',
+          edgeSampling: '边缘偏置随机方块',
+          heatmapOutput: '带发光的热力图 PNG',
           autoStatus: '自动',
           editingStatus: '编辑中',
           areaStatus: '选区',
           cells: value => `${value} 格`,
-          marks: value => `${value.toLocaleString()} 个标记`
+          marks: value => `${value.toLocaleString()} 个标记`,
+          squares: value => `${value.toLocaleString()} 个方块`
         }
       };
       const storedLanguage = (() => {
@@ -625,6 +938,14 @@
       let confirmedSelection = null;
       let selectionEditing = false;
       let selectionDrag = null;
+      let activeWorkspace = 'contour';
+      let heatSourceImage = null;
+      let heatMaskMap = null;
+      let heatIntensityMap = null;
+      let heatEdgeMap = null;
+      let heatSquares = [];
+      let heatSourceScale = 1;
+      let heatSeed = heatDefaults.seed;
 
       const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
       const formatBytes = (bytes) => {
@@ -659,8 +980,10 @@
         });
         try { localStorage.setItem('contour-grid-language', language); } catch (error) { /* Storage can be unavailable in private contexts. */ }
         updateReadouts();
+        updateHeatReadouts();
         updateRegionControls();
         if (sourceImage) render(false);
+        if (heatSourceImage) renderHeatmap();
       }
 
       function updateSliderFill(input) {
@@ -678,6 +1001,332 @@
         blockReadout.textContent = t('marks', cells.length);
         signalSwatch.style.backgroundColor = blockColor.value;
         [blockSize, gridSize, sensitivity, contourRange, brushSize].forEach(updateSliderFill);
+      }
+
+      function updateHeatReadouts() {
+        $('heatMaskValue').textContent = `${heatMask.value}%`;
+        $('heatContrastValue').textContent = `${heatContrast.value}%`;
+        $('heatGlowValue').textContent = `${heatGlow.value} px`;
+        $('heatDensityValue').textContent = `${heatDensity.value}%`;
+        $('heatSquareSizeValue').textContent = `${heatSquareSize.value} px`;
+        $('heatVariationValue').textContent = `${heatVariation.value}%`;
+        $('heatSpreadValue').textContent = `${heatSpread.value}%`;
+        $('heatSquareOpacityValue').textContent = `${heatSquareOpacity.value}%`;
+        $('heatBackgroundValue').textContent = heatBackgroundColor.value.toUpperCase();
+        $('heatSquareColorValue').textContent = heatSquareColor.value.toUpperCase();
+        $('heatSeedValue').textContent = String(heatSeed);
+        heatSignalSwatch.style.backgroundColor = heatMidColor.value;
+        [heatMask, heatContrast, heatGlow, heatDensity, heatSquareSize, heatVariation, heatSpread, heatSquareOpacity].forEach(updateSliderFill);
+        heatBlockReadout.textContent = t('squares', heatSquares.length);
+      }
+
+      function setWorkspaceMode(mode) {
+        if (!['contour', 'heatmap'].includes(mode)) return;
+        activeWorkspace = mode;
+        contourWorkspace.classList.toggle('hidden', mode !== 'contour');
+        heatmapWorkspace.classList.toggle('hidden', mode !== 'heatmap');
+        workspaceModeButtons.forEach(button => {
+          const active = button.dataset.workspaceMode === mode;
+          button.classList.toggle('is-active', active);
+          button.setAttribute('aria-pressed', String(active));
+        });
+        if (mode === 'heatmap' && heatSourceImage) renderHeatmap();
+        if (mode === 'contour' && sourceImage) render(false);
+      }
+
+      function hexToRgb(hex) {
+        const value = hex.replace('#', '');
+        const normalized = value.length === 3 ? value.split('').map(char => char + char).join('') : value;
+        return {
+          r: parseInt(normalized.slice(0, 2), 16),
+          g: parseInt(normalized.slice(2, 4), 16),
+          b: parseInt(normalized.slice(4, 6), 16)
+        };
+      }
+
+      function interpolateColor(start, end, amount) {
+        return {
+          r: Math.round(start.r + (end.r - start.r) * amount),
+          g: Math.round(start.g + (end.g - start.g) * amount),
+          b: Math.round(start.b + (end.b - start.b) * amount)
+        };
+      }
+
+      function heatGradientColor(value, palette = null) {
+        const colors = palette || {
+          low: hexToRgb(heatLowColor.value),
+          mid: hexToRgb(heatMidColor.value),
+          high: hexToRgb(heatHighColor.value)
+        };
+        const point = clamp(value, 0, 1);
+        if (point < 0.5) return interpolateColor(colors.low, colors.mid, point * 2);
+        return interpolateColor(colors.mid, colors.high, (point - 0.5) * 2);
+      }
+
+      function smoothStep(value) {
+        const point = clamp(value, 0, 1);
+        return point * point * (3 - 2 * point);
+      }
+
+      function seededRandom(seed) {
+        let value = seed >>> 0;
+        return () => {
+          value += 0x6D2B79F5;
+          let tValue = value;
+          tValue = Math.imul(tValue ^ tValue >>> 15, tValue | 1);
+          tValue ^= tValue + Math.imul(tValue ^ tValue >>> 7, tValue | 61);
+          return ((tValue ^ tValue >>> 14) >>> 0) / 4294967296;
+        };
+      }
+
+      function buildHeatMaps() {
+        const width = heatSourceCanvas.width;
+        const height = heatSourceCanvas.height;
+        const data = heatSourceCtx.getImageData(0, 0, width, height).data;
+        const gray = new Float32Array(width * height);
+        const border = { r: 0, g: 0, b: 0 };
+        const borderStep = Math.max(2, Math.round(Math.min(width, height) * 0.018));
+        let borderCount = 0;
+        for (let y = 0; y < height; y++) {
+          for (let x = 0; x < width; x++) {
+            const index = y * width + x;
+            const pixel = index * 4;
+            gray[index] = (0.299 * data[pixel] + 0.587 * data[pixel + 1] + 0.114 * data[pixel + 2]) / 255;
+            if (x < borderStep || x >= width - borderStep || y < borderStep || y >= height - borderStep) {
+              border.r += data[pixel];
+              border.g += data[pixel + 1];
+              border.b += data[pixel + 2];
+              borderCount++;
+            }
+          }
+        }
+        border.r /= borderCount || 1;
+        border.g /= borderCount || 1;
+        border.b /= borderCount || 1;
+
+        const distance = new Float32Array(width * height);
+        const samples = [];
+        for (let index = 0; index < distance.length; index++) {
+          const pixel = index * 4;
+          const red = data[pixel] - border.r;
+          const green = data[pixel + 1] - border.g;
+          const blue = data[pixel + 2] - border.b;
+          const alpha = data[pixel + 3] / 255;
+          distance[index] = Math.sqrt(red * red + green * green + blue * blue) / 441.67;
+          if (index % 17 === 0 && alpha > 0.02) samples.push(distance[index]);
+        }
+        samples.sort((a, b) => a - b);
+        const percentile = (amount) => samples[Math.floor((samples.length - 1) * amount)] || 0;
+        const lowDistance = percentile(0.18);
+        const highDistance = Math.max(lowDistance + 0.015, percentile(0.88));
+        heatMaskMap = new Float32Array(width * height);
+        heatIntensityMap = new Float32Array(width * height);
+        heatEdgeMap = new Float32Array(width * height);
+        let maxEdge = 0;
+        let lumaMin = 1;
+        let lumaMax = 0;
+        const cutoff = Number(heatMask.value) / 100;
+
+        for (let index = 0; index < distance.length; index++) {
+          const pixel = index * 4;
+          const alpha = data[pixel + 3] / 255;
+          const foreground = smoothStep((distance[index] - lowDistance) / (highDistance - lowDistance));
+          const alphaForeground = alpha < 0.98 ? alpha : foreground;
+          const mask = alphaForeground <= cutoff ? 0 : smoothStep((alphaForeground - cutoff) / Math.max(0.02, 1 - cutoff));
+          heatMaskMap[index] = mask;
+          if (mask > 0.04) {
+            lumaMin = Math.min(lumaMin, gray[index]);
+            lumaMax = Math.max(lumaMax, gray[index]);
+          }
+        }
+
+        const contrast = 0.42 + Number(heatContrast.value) / 100 * 1.6;
+        for (let y = 1; y < height - 1; y++) {
+          for (let x = 1; x < width - 1; x++) {
+            const index = y * width + x;
+            const gx = -gray[index - width - 1] - 2 * gray[index - 1] - gray[index + width - 1] + gray[index - width + 1] + 2 * gray[index + 1] + gray[index + width + 1];
+            const gy = -gray[index - width - 1] - 2 * gray[index - width] - gray[index - width + 1] + gray[index + width - 1] + 2 * gray[index + width] + gray[index + width + 1];
+            const edge = Math.sqrt(gx * gx + gy * gy);
+            heatEdgeMap[index] = edge;
+            maxEdge = Math.max(maxEdge, edge);
+          }
+        }
+        maxEdge = Math.max(maxEdge, 0.001);
+        for (let y = 1; y < height - 1; y++) {
+          for (let x = 1; x < width - 1; x++) {
+            const index = y * width + x;
+            const normalizedLuma = clamp((gray[index] - lumaMin) / Math.max(0.02, lumaMax - lumaMin), 0, 1);
+            heatIntensityMap[index] = clamp(0.5 + (normalizedLuma - 0.5) * contrast, 0, 1);
+            heatEdgeMap[index] /= maxEdge;
+          }
+        }
+
+        const candidateStep = Math.max(2, Math.round(Math.min(width, height) / 500));
+        heatEdgeCandidates = [];
+        for (let y = candidateStep; y < height - candidateStep; y += candidateStep) {
+          for (let x = candidateStep; x < width - candidateStep; x += candidateStep) {
+            const index = y * width + x;
+            if (heatMaskMap[index] < 0.08) continue;
+            const dx = heatMaskMap[index + 1] - heatMaskMap[index - 1];
+            const dy = heatMaskMap[index + width] - heatMaskMap[index - width];
+            const boundary = Math.min(1, Math.hypot(dx, dy) * 2.8);
+            const edge = heatEdgeMap[index];
+            const strength = boundary * 0.82 + edge * 0.18;
+            if (boundary < 0.035 && !(edge > 0.38 && heatMaskMap[index] < 0.78)) continue;
+            const normalLength = Math.hypot(dx, dy) || 1;
+            heatEdgeCandidates.push({ x, y, nx: dx / normalLength, ny: dy / normalLength, strength });
+          }
+        }
+      }
+
+      let heatEdgeCandidates = [];
+      let heatFieldCanvas = null;
+
+      function createHeatFieldCanvas() {
+        if (!heatSourceCanvas.width || !heatSourceCanvas.height || !heatMaskMap) return null;
+        if (!heatFieldCanvas) heatFieldCanvas = document.createElement('canvas');
+        heatFieldCanvas.width = heatSourceCanvas.width;
+        heatFieldCanvas.height = heatSourceCanvas.height;
+        const context = heatFieldCanvas.getContext('2d');
+        const image = context.createImageData(heatSourceCanvas.width, heatSourceCanvas.height);
+        const palette = {
+          low: hexToRgb(heatLowColor.value),
+          mid: hexToRgb(heatMidColor.value),
+          high: hexToRgb(heatHighColor.value)
+        };
+        for (let index = 0; index < heatMaskMap.length; index++) {
+          const point = clamp(heatIntensityMap[index], 0, 1);
+          const amount = point < 0.5 ? point * 2 : (point - 0.5) * 2;
+          const start = point < 0.5 ? palette.low : palette.mid;
+          const end = point < 0.5 ? palette.mid : palette.high;
+          const alpha = Math.round(clamp(heatMaskMap[index], 0, 1) * 255);
+          const pixel = index * 4;
+          image.data[pixel] = Math.round(start.r + (end.r - start.r) * amount);
+          image.data[pixel + 1] = Math.round(start.g + (end.g - start.g) * amount);
+          image.data[pixel + 2] = Math.round(start.b + (end.b - start.b) * amount);
+          image.data[pixel + 3] = alpha;
+        }
+        context.putImageData(image, 0, 0);
+        return heatFieldCanvas;
+      }
+
+      function makeHeatSquares() {
+        if (!heatEdgeCandidates.length) return [];
+        const random = seededRandom(heatSeed);
+        const density = Number(heatDensity.value) / 100;
+        const baseSize = Number(heatSquareSize.value);
+        const variation = Number(heatVariation.value) / 100;
+        const spread = Number(heatSpread.value) / 100 * baseSize * 2.8;
+        const target = Math.round(density * Math.min(700, (heatSourceCanvas.width + heatSourceCanvas.height) * 0.18));
+        const used = new Set();
+        const squares = [];
+        const minDistance = Math.max(3, baseSize * 0.38);
+        let attempts = 0;
+        while (squares.length < target && attempts < target * 18) {
+          attempts++;
+          const candidateIndex = Math.floor(random() * heatEdgeCandidates.length);
+          if (used.has(candidateIndex)) continue;
+          used.add(candidateIndex);
+          const candidate = heatEdgeCandidates[candidateIndex];
+          const tangentX = -candidate.ny;
+          const tangentY = candidate.nx;
+          const normalOffset = (random() * 2 - 1) * spread;
+          const tangentOffset = (random() * 2 - 1) * spread * 0.62;
+          const x = candidate.x + candidate.nx * normalOffset + tangentX * tangentOffset;
+          const y = candidate.y + candidate.ny * normalOffset + tangentY * tangentOffset;
+          if (x < -baseSize || y < -baseSize || x > heatSourceCanvas.width + baseSize || y > heatSourceCanvas.height + baseSize) continue;
+          const size = clamp(baseSize * (1 + (random() * 2 - 1) * variation), 3, 120);
+          if (squares.some(square => Math.hypot(square.x - x, square.y - y) < Math.min(square.size, size) * 0.38)) continue;
+          squares.push({ x, y, size, strength: candidate.strength, opacity: (Number(heatSquareOpacity.value) / 100) * (0.62 + random() * 0.38) });
+        }
+        return squares;
+      }
+
+      function drawHeatScene(context, scaleX = 1, scaleY = scaleX) {
+        if (!heatFieldCanvas || !heatSourceCanvas.width) return;
+        const width = heatSourceCanvas.width;
+        const height = heatSourceCanvas.height;
+        context.save();
+        context.scale(scaleX, scaleY);
+        context.fillStyle = heatBackgroundColor.value;
+        context.fillRect(0, 0, width, height);
+        const glow = Number(heatGlow.value);
+        if (glow > 0) {
+          context.save();
+          context.globalAlpha = 0.62;
+          context.filter = `blur(${glow}px)`;
+          context.drawImage(heatFieldCanvas, 0, 0);
+          context.restore();
+        }
+        context.drawImage(heatFieldCanvas, 0, 0);
+        context.save();
+        context.strokeStyle = heatSquareColor.value;
+        context.lineJoin = 'miter';
+        for (const square of heatSquares) {
+          context.globalAlpha = square.opacity;
+          context.lineWidth = Math.max(0.7, square.size * 0.075);
+          context.strokeRect(square.x - square.size / 2, square.y - square.size / 2, square.size, square.size);
+        }
+        context.restore();
+        context.restore();
+      }
+
+      function renderHeatmap() {
+        updateHeatReadouts();
+        if (!heatSourceImage || !heatMaskMap) return;
+        heatSquares = makeHeatSquares();
+        heatPreviewCtx.clearRect(0, 0, heatPreviewCanvas.width, heatPreviewCanvas.height);
+        drawHeatScene(heatPreviewCtx, 1);
+        heatEmptyState.classList.add('hidden');
+        heatDimensionReadout.textContent = `${heatSourceCanvas.width} × ${heatSourceCanvas.height}`;
+        heatBlockReadout.textContent = t('squares', heatSquares.length);
+        heatExportBtn.disabled = !heatSquares.length && !heatFieldCanvas;
+        sendToContourBtn.disabled = !heatFieldCanvas;
+      }
+
+      function resizeHeatCanvas() {
+        if (!heatSourceImage) return;
+        const maxDimension = 1000;
+        heatSourceScale = Math.min(1, maxDimension / Math.max(heatSourceImage.naturalWidth, heatSourceImage.naturalHeight));
+        heatSourceCanvas.width = Math.max(1, Math.round(heatSourceImage.naturalWidth * heatSourceScale));
+        heatSourceCanvas.height = Math.max(1, Math.round(heatSourceImage.naturalHeight * heatSourceScale));
+        heatSourceCtx.clearRect(0, 0, heatSourceCanvas.width, heatSourceCanvas.height);
+        heatSourceCtx.drawImage(heatSourceImage, 0, 0, heatSourceCanvas.width, heatSourceCanvas.height);
+        heatPreviewCanvas.width = heatSourceCanvas.width;
+        heatPreviewCanvas.height = heatSourceCanvas.height;
+        heatStage.style.setProperty('--canvas-ratio', String(heatSourceCanvas.width / heatSourceCanvas.height));
+        heatDimensionReadout.textContent = `${heatSourceCanvas.width} × ${heatSourceCanvas.height}`;
+      }
+
+      function setHeatSourceImage(image, name = 'heatmap-source.png', size = 0) {
+        heatSourceImage = image;
+        heatEdgeCandidates = [];
+        heatSquares = [];
+        heatFieldCanvas = null;
+        resizeHeatCanvas();
+        buildHeatMaps();
+        createHeatFieldCanvas();
+        heatSquares = makeHeatSquares();
+        heatFileMeta.classList.remove('hidden');
+        heatFileMeta.classList.add('flex');
+        heatFileName.textContent = name;
+        heatFileSize.textContent = size ? formatBytes(size) : t('generated');
+        engineStatus.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-zinc-400"></span><span data-i18n="signalReady">${t('signalReady')}</span>`;
+        engineStatus.classList.remove('text-zinc-500');
+        engineStatus.classList.add('text-zinc-300/80');
+        renderHeatmap();
+      }
+
+      function loadHeatFile(file) {
+        if (!file || !file.type.startsWith('image/')) return;
+        const url = URL.createObjectURL(file);
+        const image = new Image();
+        image.onload = () => {
+          setHeatSourceImage(image, file.name, file.size);
+          URL.revokeObjectURL(url);
+        };
+        image.onerror = () => URL.revokeObjectURL(url);
+        image.src = url;
       }
 
       function updateMarkerControls() {
@@ -1364,6 +2013,34 @@
         const exportLocked = regionMode === 'manual' && selectionEditing;
         exportBtn.disabled = !cells.length || exportLocked;
         exportFullBtn.disabled = !sourceImage || exportLocked;
+        sendToHeatmapBtn.disabled = !sourceImage || exportLocked;
+      }
+
+      function setContourSourceImage(image, name = 'contour-source.png', size = 0) {
+        sourceImage = image;
+        analyzedCells = [];
+        selection = null;
+        confirmedSelection = null;
+        selectionEditing = false;
+        regionMode = 'auto';
+        brushMode = 'off';
+        brushHistory = [];
+        currentBrushStroke = null;
+        brushCursor = null;
+        brushPainting = false;
+        resizePreviewCanvas();
+        computeSobel();
+        selectAreaBtn.disabled = false;
+        updateRegionControls();
+        render(true);
+        emptyState.classList.add('hidden');
+        fileMeta.classList.remove('hidden');
+        fileMeta.classList.add('flex');
+        fileName.textContent = name;
+        fileSize.textContent = size ? formatBytes(size) : t('generated');
+        engineStatus.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-zinc-400"></span><span data-i18n="signalReady">${t('signalReady')}</span>`;
+        engineStatus.classList.remove('text-zinc-500');
+        engineStatus.classList.add('text-zinc-300/80');
       }
 
       function loadFile(file) {
@@ -1371,30 +2048,7 @@
         const url = URL.createObjectURL(file);
         const img = new Image();
         img.onload = () => {
-          sourceImage = img;
-          analyzedCells = [];
-          selection = null;
-          confirmedSelection = null;
-          selectionEditing = false;
-          regionMode = 'auto';
-          brushMode = 'off';
-          brushHistory = [];
-          currentBrushStroke = null;
-          brushCursor = null;
-          brushPainting = false;
-          resizePreviewCanvas();
-          computeSobel();
-          selectAreaBtn.disabled = false;
-          updateRegionControls();
-          render(true);
-          emptyState.classList.add('hidden');
-          fileMeta.classList.remove('hidden');
-          fileMeta.classList.add('flex');
-          fileName.textContent = file.name;
-          fileSize.textContent = formatBytes(file.size);
-          engineStatus.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-zinc-400"></span><span data-i18n="signalReady">${t('signalReady')}</span>`;
-          engineStatus.classList.remove('text-zinc-500');
-          engineStatus.classList.add('text-zinc-300/80');
+          setContourSourceImage(img, file.name, file.size);
           URL.revokeObjectURL(url);
         };
         img.onerror = () => URL.revokeObjectURL(url);
@@ -1405,13 +2059,38 @@
       ['dragenter', 'dragover'].forEach(type => uploadZone.addEventListener(type, (event) => { event.preventDefault(); uploadZone.classList.add('is-dragging'); }));
       ['dragleave', 'drop'].forEach(type => uploadZone.addEventListener(type, (event) => { event.preventDefault(); uploadZone.classList.remove('is-dragging'); }));
       uploadZone.addEventListener('drop', (event) => loadFile(event.dataTransfer.files[0]));
+      workspaceModeButtons.forEach(button => button.addEventListener('click', () => setWorkspaceMode(button.dataset.workspaceMode)));
+      heatFileInput.addEventListener('change', (event) => loadHeatFile(event.target.files[0]));
+      ['dragenter', 'dragover'].forEach(type => heatUploadZone.addEventListener(type, (event) => { event.preventDefault(); heatUploadZone.classList.add('is-dragging'); }));
+      ['dragleave', 'drop'].forEach(type => heatUploadZone.addEventListener(type, (event) => { event.preventDefault(); heatUploadZone.classList.remove('is-dragging'); }));
+      heatUploadZone.addEventListener('drop', (event) => loadHeatFile(event.dataTransfer.files[0]));
       languageButtons.forEach(button => button.addEventListener('click', () => applyLanguage(button.dataset.language)));
       [blockSize, blockColor, brushSize].forEach(input => input.addEventListener('input', () => render(false)));
       [gridSize, sensitivity, contourRange].forEach(input => input.addEventListener('input', () => render(true)));
+      [heatMask, heatContrast].forEach(input => input.addEventListener('input', () => {
+        if (!heatSourceImage) { updateHeatReadouts(); return; }
+        buildHeatMaps();
+        createHeatFieldCanvas();
+        renderHeatmap();
+      }));
+      [heatLowColor, heatMidColor, heatHighColor].forEach(input => input.addEventListener('input', () => {
+        if (!heatSourceImage) { updateHeatReadouts(); return; }
+        createHeatFieldCanvas();
+        renderHeatmap();
+      }));
+      [heatBackgroundColor, heatGlow, heatDensity, heatSquareSize, heatVariation, heatSpread, heatSquareColor, heatSquareOpacity].forEach(input => input.addEventListener('input', () => {
+        updateHeatReadouts();
+        if (heatSourceImage) renderHeatmap();
+      }));
       markerModeButtons.forEach(button => button.addEventListener('click', () => setMarkerMode(button.dataset.markerStyle)));
       brushModeButtons.forEach(button => button.addEventListener('click', () => setBrushMode(button.dataset.brushMode)));
       undoBrushBtn.addEventListener('click', undoBrushStroke);
       clearBrushBtn.addEventListener('click', clearBrushEdits);
+      shuffleHeatSeedBtn.addEventListener('click', () => {
+        heatSeed = Math.floor(Math.random() * 9000) + 1000;
+        updateHeatReadouts();
+        if (heatSourceImage) renderHeatmap();
+      });
 
       autoSubjectBtn.addEventListener('click', () => setRegionMode('auto'));
       selectAreaBtn.addEventListener('click', () => setRegionMode('manual'));
@@ -1539,7 +2218,7 @@
         }
       });
 
-      $('resetBtn').addEventListener('click', () => {
+      function resetContourSettings() {
         blockSize.value = defaults.blockSize;
         gridSize.value = defaults.gridSize;
         sensitivity.value = defaults.sensitivity;
@@ -1560,6 +2239,35 @@
         updateBrushControls();
         updateRegionControls();
         render(true);
+      }
+
+      function resetHeatSettings() {
+        heatLowColor.value = heatDefaults.low;
+        heatMidColor.value = heatDefaults.mid;
+        heatHighColor.value = heatDefaults.high;
+        heatBackgroundColor.value = heatDefaults.background;
+        heatMask.value = heatDefaults.mask;
+        heatContrast.value = heatDefaults.contrast;
+        heatGlow.value = heatDefaults.glow;
+        heatDensity.value = heatDefaults.density;
+        heatSquareSize.value = heatDefaults.size;
+        heatVariation.value = heatDefaults.variation;
+        heatSpread.value = heatDefaults.spread;
+        heatSquareColor.value = heatDefaults.squareColor;
+        heatSquareOpacity.value = heatDefaults.opacity;
+        heatSeed = heatDefaults.seed;
+        if (heatSourceImage) {
+          buildHeatMaps();
+          createHeatFieldCanvas();
+          renderHeatmap();
+        } else {
+          updateHeatReadouts();
+        }
+      }
+
+      $('resetBtn').addEventListener('click', () => {
+        if (activeWorkspace === 'heatmap') resetHeatSettings();
+        else resetContourSettings();
       });
 
       function createExportCanvas(includeImage) {
@@ -1573,6 +2281,33 @@
         drawMarkers(outputCtx);
         outputCtx.restore();
         return output;
+      }
+
+      function createHeatExportCanvas() {
+        if (!heatSourceImage || !heatFieldCanvas) return null;
+        const output = document.createElement('canvas');
+        output.width = heatSourceImage.naturalWidth;
+        output.height = heatSourceImage.naturalHeight;
+        const outputCtx = output.getContext('2d');
+        drawHeatScene(outputCtx, output.width / heatSourceCanvas.width, output.height / heatSourceCanvas.height);
+        return output;
+      }
+
+      function sendCanvasToWorkspace(canvas, target, name) {
+        if (!canvas) return;
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          const url = URL.createObjectURL(blob);
+          const image = new Image();
+          image.onload = () => {
+            if (target === 'heatmap') setHeatSourceImage(image, name, blob.size);
+            if (target === 'contour') setContourSourceImage(image, name, blob.size);
+            setWorkspaceMode(target);
+            URL.revokeObjectURL(url);
+          };
+          image.onerror = () => URL.revokeObjectURL(url);
+          image.src = url;
+        }, 'image/png');
       }
 
       function downloadCanvas(output, filename) {
@@ -1599,10 +2334,26 @@
         downloadCanvas(createExportCanvas(true), 'contour-grid-full.png');
       });
 
+      heatExportBtn.addEventListener('click', () => {
+        const output = createHeatExportCanvas();
+        if (output) downloadCanvas(output, 'contour-heatmap.png');
+      });
+
+      sendToHeatmapBtn.addEventListener('click', () => {
+        if (!sourceImage || (regionMode === 'manual' && selectionEditing)) return;
+        sendCanvasToWorkspace(createExportCanvas(true), 'heatmap', 'contour-to-heatmap.png');
+      });
+
+      sendToContourBtn.addEventListener('click', () => {
+        sendCanvasToWorkspace(createHeatExportCanvas(), 'contour', 'heatmap-to-contour.png');
+      });
+
       updateReadouts();
+      updateHeatReadouts();
       updateMarkerControls();
       updateRegionControls();
       applyLanguage(currentLanguage);
+      setWorkspaceMode('contour');
       previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
     })();
   </script>
